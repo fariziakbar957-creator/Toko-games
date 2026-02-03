@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURE PORTAL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 20px;
+            border-bottom: 2px solid #00b4d8;
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #00b4d8, #90e0ef);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #90e0ef;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 180, 216, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 180, 216, 0.3);
+        }
+
+        .card h3 {
+            color: #00b4d8;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: #caf0f8;
+            line-height: 1.6;
+        }
+
+        .exit-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .exit-modal {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 50px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid #ff006e;
+            box-shadow: 0 0 50px rgba(255, 0, 110, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 50px rgba(255, 0, 110, 0.5); }
+            50% { box-shadow: 0 0 70px rgba(255, 0, 110, 0.8); }
+        }
+
+        .exit-modal h2 {
+            color: #ff006e;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .exit-modal p {
+            text-align: center;
+            color: #ffb3c6;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ff006e;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #90e0ef;
+            box-shadow: 0 0 20px rgba(144, 224, 239, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(90deg, #ff006e, #ff6b9d);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #ff006e, #ff2d7f);
+            transform: scale(1.05);
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #90e0ef;
+            border: 2px solid #90e0ef;
+            flex: 1;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(144, 224, 239, 0.1);
+        }
+
+        .attempts-counter {
+            text-align: center;
+            color: #ffb3c6;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .attempts-counter.error {
+            color: #ff006e;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .locked-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.98);
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+
+        .locked-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .locked-content h2 {
+            color: #ff006e;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .locked-content p {
+            color: #caf0f8;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .cooldown-timer {
+            font-size: 3rem;
+            color: #ff006e;
+            margin: 30px 0;
+            font-family: monospace;
+        }
+
+        .security-logs {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #00b4d8;
+            max-width: 300px;
+            display: none;
+            z-index: 9999;
+        }
+
+        .log-entry {
+            color: #90e0ef;
+            font-size: 0.9rem;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00b4d8;
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 180, 216, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.3s;
+            z-index: 10002;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #90e0ef;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(0, 180, 216, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .exit-modal {
+                padding: 30px 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="background-effects" id="particles"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <header>
+            <h1>🔒 SECURE PORTAL SYSTEM</h1>
+            <p class="subtitle">Restricted Access Area - Authorized Personnel Only</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <h3>🛡️ Security Protocols</h3>
+                <p>Advanced security measures are in place to protect sensitive information. All activities are monitored and logged.</p>
+            </div>
+
+            <div class="card">
+                <h3>📊 System Status</h3>
+                <p>All systems operational. Security level: MAXIMUM. Last security audit: Today, 14:30 UTC</p>
+            </div>
+
+            <div class="card">
+                <h3>⚠️ Important Notice</h3>
+                <p>This portal is secured with exit protection. To leave this page, you must enter the correct security password.</p>
+            </div>
+
+            <div class="card">
+                <h3>🔐 Access Control</h3>
+                <p>Unauthorized exit attempts will be logged and may result in temporary lockout from the system.</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="card">
+                <h3>📈 Analytics Dashboard</h3>
+                <p>Real-time monitoring of system performance and security metrics. All data is encrypted in transit and at rest.</p>
+            </div>
+
+            <div class="card">
+                <h3>👥 User Management</h3>
+                <p>Active sessions: 1. Your access level: ADMIN. Session timeout: Disabled (Exit protection active).</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2024 Secure Portal System | Session ID: SP-2024-7X9Y2Z | Connection: ENCRYPTED</p>
+            <p id="sessionTimer">Session active: 00:00:00</p>
+        </footer>
+    </div>
+
+    <!-- Exit Warning Modal -->
+    <div class="exit-warning" id="exitModal">
+        <div class="exit-modal">
+            <h2>🚨 SECURITY CHECKPOINT</h2>
+            <p>You are attempting to leave a secured area. For security reasons, you must verify your identity.</p>
+            <p><strong>Enter security password to exit:</strong></p>
+            <input type="password" 
+                   class="password-input" 
+                   id="exitPassword" 
+                   placeholder="Enter password..."
+                   maxlength="20"
+                   autocomplete="off"
+                   onkeypress="if(event.key === 'Enter') verifyExit()">
+            <div class="button-group">
+                <button class="btn btn-submit" onclick="verifyExit()">VERIFY & EXIT</button>
+                <button class="btn btn-cancel" onclick="cancelExit()">CANCEL</button>
+            </div>
+            <div class="attempts-counter" id="attemptCounter">
+                Attempts remaining: <span id="attemptsLeft">3</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locked Message -->
+    <div class="locked-message" id="lockedScreen">
+        <div class="locked-content">
+            <h2>🔐 SYSTEM LOCKED</h2>
+            <p>Too many incorrect password attempts. Security protocols have been activated.</p>
+            <p>Please wait for the cooldown period to end before trying again.</p>
+            <div class="cooldown-timer" id="cooldownTimer">05:00</div>
+            <p>All activities have been logged and reported to system administrators.</p>
+        </div>
+    </div>
+
+    <!-- Security Logs -->
+    <div class="security-logs" id="securityLogs">
+        <div class="log-entry" id="log1">[SYSTEM] Security system active</div>
+        <div class="log-entry" id="log2">[SYSTEM] Exit protection: ENABLED</div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Security Configuration
+        const CORRECT_PASSWORD = "SECURE@2024"; // Password untuk keluar
+        const MAX_ATTEMPTS = 3;
+        const LOCKOUT_TIME = 300; // 5 menit dalam detik
+
+        // State variables
+        let exitAttempts = 0;
+        let isLocked = false;
+        let lockoutEndTime = 0;
+        let sessionStartTime = Date.now();
+        let mouseLeaveCount = 0;
+
+        // DOM Elements
+        const exitModal = document.getElementById('exitModal');
+        const lockedScreen = document.getElementById('lockedScreen');
+        const securityLogs = document.getElementById('securityLogs');
+        const notification = document.getElementById('notification');
+        const attemptsLeft = document.getElementById('attemptsLeft');
+        const cooldownTimer = document.getElementById('cooldownTimer');
+        const sessionTimer = document.getElementById('sessionTimer');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create background particles
+            createParticles();
+            
+            // Start session timer
+            updateSessionTimer();
+            setInterval(updateSessionTimer, 1000);
+            
+            // Show initial logs
+            showSecurityLogs();
+            
+            // Prevent right click
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // Show welcome notification
+            showNotification('🔒 Security system activated. Exit protection enabled.', 'info');
+            
+            // Add escape key handler
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // Add mouse leave detection
+            document.addEventListener('mouseleave', handleMouseLeave);
+            
+            // Add beforeunload handler
+            window.addEventListener('beforeunload', handleBeforeUnload);
+            
+            // Add visibility change handler
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        });
+
+        // Create background particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.opacity = Math.random() * 0.5 + 0.2;
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Handle exit attempts
+        function handleExitAttempt() {
+            if (isLocked) {
+                showLockedScreen();
+                return;
+            }
+            
+            exitModal.style.display = 'flex';
+            document.getElementById('exitPassword').focus();
+            
+            // Log the attempt
+            addSecurityLog(`[SECURITY] Exit attempt detected - Attempt ${exitAttempts + 1}/${MAX_ATTEMPTS}`);
+        }
+
+        // Verify exit password
+        function verifyExit() {
+            const passwordInput = document.getElementById('exitPassword');
+            const password = passwordInput.value;
+            
+            if (password === CORRECT_PASSWORD) {
+                // Correct password - allow exit
+                showNotification('✅ Password verified. Exiting...', 'success');
+                addSecurityLog('[SECURITY] Password verified - Exit granted');
+                
+                // Remove exit protection
+                window.removeEventListener('beforeunload', handleBeforeUnload);
+                
+                // Wait a moment then allow navigation
+                setTimeout(() => {
+                    exitModal.style.display = 'none';
+                    // Redirect to Google or close tab
+                    window.location.href = 'https://www.google.com';
+                }, 1500);
+            } else {
+                // Incorrect password
+                exitAttempts++;
+                attemptsLeft.textContent = MAX_ATTEMPTS - exitAttempts;
+                
+                const attemptCounter = document.getElementById('attemptCounter');
+                attemptCounter.classList.add('error');
+                setTimeout(() => attemptCounter.classList.remove('error'), 500);
+                
+                addSecurityLog(`[SECURITY] Incorrect password attempt - ${exitAttempts}/${MAX_ATTEMPTS}`);
+                
+                if (exitAttempts >= MAX_ATTEMPTS) {
+                    // Lock the system
+                    lockSystem();
+                } else {
+                    showNotification(`❌ Incorrect password. ${MAX_ATTEMPTS - exitAttempts} attempts remaining.`, 'error');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            }
+        }
+
+        // Lock the system
+        function lockSystem() {
+            isLocked = true;
+            lockoutEndTime = Date.now() + (LOCKOUT_TIME * 1000);
+            
+            exitModal.style.display = 'none';
+            showLockedScreen();
+            
+            addSecurityLog('[SECURITY] SYSTEM LOCKED - Maximum attempts exceeded');
+            showNotification('🔐 System locked for security reasons.', 'error');
+            
+            // Start cooldown timer
+            updateCooldownTimer();
+            const timerInterval = setInterval(updateCooldownTimer, 1000);
+            
+            // Store timer interval to clear later
+            window.lockTimerInterval = timerInterval;
+        }
+
+        // Show locked screen
+        function showLockedScreen() {
+            lockedScreen.style.display = 'flex';
+        }
+
+        // Update cooldown timer
+        function updateCooldownTimer() {
+            if (!isLocked) return;
+            
+            const now = Date.now();
+            const timeLeft = Math.max(0, lockoutEndTime - now);
+            
+            if (timeLeft <= 0) {
+                // Unlock system
+                isLocked = false;
+                exitAttempts = 0;
+                attemptsLeft.textContent = MAX_ATTEMPTS;
+                lockedScreen.style.display = 'none';
+                clearInterval(window.lockTimerInterval);
+                showNotification('✅ System unlocked. You may try again.', 'info');
+                addSecurityLog('[SECURITY] System unlocked - Cooldown complete');
+                return;
+            }
+            
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+            cooldownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Cancel exit attempt
+        function cancelExit() {
+            exitModal.style.display = 'none';
+            document.getElementById('exitPassword').value = '';
+            showNotification('Exit cancelled. Returning to secure portal.', 'info');
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.style.background = type === 'error' 
+                ? 'rgba(255, 0, 110, 0.9)' 
+                : type === 'success' 
+                ? 'rgba(0, 200, 83, 0.9)'
+                : 'rgba(0, 180, 216, 0.9)';
+            
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Add security log
+        function addSecurityLog(message) {
+            const logs = document.getElementById('securityLogs');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(logEntry);
+            
+            // Keep only last 5 logs
+            const allLogs = logs.querySelectorAll('.log-entry');
+            if (allLogs.length > 5) {
+                allLogs[0].remove();
+            }
+            
+            // Auto-scroll to bottom
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Show security logs
+        function showSecurityLogs() {
+            securityLogs.style.display = 'block';
+            setTimeout(() => {
+                securityLogs.style.display = 'none';
+            }, 5000);
+        }
+
+        // Handle key presses
+        function handleKeyPress(e) {
+            // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                showNotification('⚠️ Developer tools are disabled for security.', 'error');
+                addSecurityLog('[SECURITY] Developer tools access blocked');
+            }
+            
+            // Escape key shows exit modal
+            if (e.key === 'Escape' && !exitModal.style.display === 'flex' && !isLocked) {
+                handleExitAttempt();
+            }
+        }
+
+        // Handle mouse leaving window
+        function handleMouseLeave(e) {
+            if (e.clientY <= 0 && !isLocked) {
+                mouseLeaveCount++;
+                if (mouseLeaveCount >= 2) {
+                    handleExitAttempt();
+                    mouseLeaveCount = 0;
+                } else {
+                    showNotification('⚠️ Mouse movement detected near exit zone.', 'info');
+                }
+            }
+        }
+
+        // Handle before unload
+        function handleBeforeUnload(e) {
+            e.preventDefault();
+            e.returnValue = 'You must use the proper exit procedure. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+
+        // Handle visibility change (tab switching)
+        function handleVisibilityChange() {
+            if (document.hidden && !isLocked) {
+                addSecurityLog('[SECURITY] Tab switch detected');
+                showNotification('⚠️ Please stay on this tab for security reasons.', 'info');
+            }
+        }
+
+        // Update session timer
+        function updateSessionTimer() {
+            const elapsed = Date.now() - sessionStartTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            
+            sessionTimer.textContent = `Session active: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Make security logs toggle on click
+        securityLogs.addEventListener('click', function() {
+            this.style.display = this.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Prevent drag and drop
+        document.addEventListener('dragstart', e => e.preventDefault());
+        document.addEventListener('drop', e => e.preventDefault());
+    </script>
+</body>
+</html>
